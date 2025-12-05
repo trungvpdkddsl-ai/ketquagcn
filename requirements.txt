@@ -1,5 +1,6 @@
 streamlit
 pandas
-google-genai
+# Bắt buộc cài đặt phiên bản mới nhất
+google-genai>=0.10.0 
 openpyxl
 xlsxwriter
