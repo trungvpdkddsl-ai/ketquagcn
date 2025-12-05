@@ -48,6 +48,7 @@ JSON_SCHEMA = {
 def extract_data_via_gemini(uploaded_file):
     """
     Tải file lên Gemini API, yêu cầu trích xuất JSON có cấu trúc, sau đó xóa file.
+    (Đã sửa lỗi mime_type và display_name bằng cách chỉ truyền file bytes.)
     """
     file = None
     try:
@@ -55,10 +56,9 @@ def extract_data_via_gemini(uploaded_file):
         
         st.caption(f"Đang tải **{uploaded_file.name}** lên Gemini...")
         
-        # --- ĐÃ SỬA LỖI MIME_TYPE ---
-        # Bỏ tham số mime_type. Chỉ truyền file bytes và display_name.
-        # SDK mới sẽ tự động nhận dạng loại file (pdf/txt) từ bytes.
-        file = client.files.upload(file=file_bytes, display_name=uploaded_file.name)
+        # --- KHẮC PHỤC LỖI TẢI FILE ---
+        # Chỉ truyền file bytes. SDK sẽ tự động xử lý loại file và đặt tên.
+        file = client.files.upload(file=file_bytes)
 
         # Xây dựng Prompt
         prompt = (
