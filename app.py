@@ -16,10 +16,12 @@ st.set_page_config(
 
 # Kiểm tra và thiết lập Client
 try:
+    # Client tự động tìm khóa GEMINI_API_KEY từ biến môi trường
     client = genai.Client()
     MODEL_NAME = "gemini-2.5-flash"
 except Exception:
-    st.error("LỖI: Không tìm thấy GEMINI_API_KEY. Vui lòng thiết lập biến môi trường này.")
+    # Lỗi sẽ xuất hiện nếu khóa API chưa được đặt trong Secrets
+    st.error("LỖI: Không tìm thấy GEMINI_API_KEY. Vui lòng thiết lập biến môi trường này trong mục Secrets của Streamlit Cloud.")
     st.stop()
 
 # Định nghĩa cấu trúc JSON mong muốn
@@ -49,16 +51,14 @@ def extract_data_via_gemini(uploaded_file):
     """
     file = None
     try:
-        # Tải file lên Gemini (xử lý byte content)
-        st.caption(f"Đang tải **{uploaded_file.name}** lên Gemini...")
-        
-        # Streamlit file uploader cung cấp getvalue() là bytes
         file_bytes = uploaded_file.getvalue()
         
-        # Sử dụng loại file dựa trên phần mở rộng
-        mime_type = "application/pdf" if uploaded_file.type == "application/pdf" else "text/plain"
+        st.caption(f"Đang tải **{uploaded_file.name}** lên Gemini...")
         
-        file = client.files.upload(file=file_bytes, mime_type=mime_type)
+        # --- ĐÃ SỬA LỖI MIME_TYPE ---
+        # Bỏ tham số mime_type. Chỉ truyền file bytes và display_name.
+        # SDK mới sẽ tự động nhận dạng loại file (pdf/txt) từ bytes.
+        file = client.files.upload(file=file_bytes, display_name=uploaded_file.name)
 
         # Xây dựng Prompt
         prompt = (
@@ -87,7 +87,7 @@ def extract_data_via_gemini(uploaded_file):
         st.error(f"Lỗi API khi xử lý {uploaded_file.name}: {e}")
         return None
     except json.JSONDecodeError:
-        st.error(f"Lỗi phân tích JSON từ phản hồi của Gemini cho {uploaded_file.name}.")
+        st.error(f"Lỗi phân tích JSON từ phản hồi của Gemini cho {uploaded_file.name}. Vui lòng kiểm tra lại chất lượng file PDF.")
         return None
     except Exception as e:
         st.error(f"Lỗi không xác định khi xử lý {uploaded_file.name}: {e}")
